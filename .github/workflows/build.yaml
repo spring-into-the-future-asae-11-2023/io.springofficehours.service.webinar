@@ -1,0 +1,35 @@
+name: ASAe Build 
+on:
+  pull_request:
+    branches:
+    - main
+    - automation
+  workflow_dispatch:
+
+env:
+  ASC_PACKAGE_PATH: ${{ github.workspace }}
+  AZURE_SUBSCRIPTION: ${{ vars.SUB }}
+
+jobs:
+  deploy_to_production:
+    runs-on: ubuntu-latest
+    name: build with source code
+    steps:
+      - name: Checkout GitHub Action
+        uses: actions/checkout@v2
+
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDS }}
+
+      - name: Create or update build
+        uses: azure/spring-apps-deploy@v1
+        with:
+          azure-subscription: ${{ env.AZURE_SUBSCRIPTION }}
+          action: build
+          service-name: asa-e-si-01
+          build-name: spring-upgrade
+          package: ${{ env.ASC_PACKAGE_PATH }}
+          builder: default
+          build-env: -BP_JVM_VERSION 17

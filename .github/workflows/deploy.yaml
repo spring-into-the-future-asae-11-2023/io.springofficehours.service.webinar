@@ -1,0 +1,37 @@
+name: ASAe Deploy 
+on:
+  workflow_run:
+    workflows: ["ASAe Build"]
+    types:
+    - completed
+  workflow_dispatch:
+
+env:
+  ASC_PACKAGE_PATH: ${{ github.workspace }}
+  AZURE_SUBSCRIPTION: ${{ vars.SUB }}
+
+jobs:
+  deploy_to_production:
+    runs-on: ubuntu-latest
+    name: deploy latest image
+    steps:
+      - name: Checkout GitHub Action
+        uses: actions/checkout@v2
+
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDS }}
+
+      - name: Deploy Custom Image
+        uses: Azure/spring-apps-deploy@v1
+        with:
+          azure-subscription: ${{ env.AZURE_SUBSCRIPTION }}
+          action: deploy
+          service-name: asa-e-si-02
+          app-name: spring-upgrade
+          deployment-name: default
+          container-registry: akptest.azurecr.io
+          registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          container-image: spring-upgrade:result
